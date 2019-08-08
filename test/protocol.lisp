@@ -77,3 +77,12 @@
                  ((:foo ("~A ~A" 1 2)))
 
                  ((:foo ("~A ~A" 1 2)) (:bar ("~A ~A" 3 4) ((:after :foo)))))))
+
+(select-items (print-items (make-instance 'mock :a 1 :b 2)) :b :a :c)
+
+(defun f (items)
+  (format-selected-items *standard-output* "~A ~A" items :a :b))
+
+(progn
+  (fresh-line)
+  (f (print-items (make-instance 'mock :a 1 :b 2))))

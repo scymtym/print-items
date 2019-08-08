@@ -254,6 +254,23 @@
     #+RESULTS:
     : #<CUSTOM-PRINTING-BINDING my name is "name", my value is  = 5, the normal format would be |"name" = 5| {100A0792A3}>
 
+    The above code can be simplified using the
+    ~utilities.print-items:select-items~ and
+    ~utilities.print-items:format-selected-items~ functions:
+
+    #+BEGIN_SRC lisp :exports both :results value
+      (defmethod print-object ((object custom-printing-binding) stream)
+        (print-unreadable-object (object stream :type t :identity t)
+          (let ((items (utilities.print-items:print-items object)))
+            (utilities.print-items:format-selected-items
+            stream "my name is ~A, my value is ~A" items :name :value))))
+
+      (princ-to-string (make-instance 'custom-printing-binding :name "name" :value 5))
+    #+END_SRC
+
+    #+RESULTS:
+    : #<CUSTOM-PRINTING-BINDING my name is "name", my value is = 5 {10064073D3}>
+
 * Reference
 
   The =utilities.print-items= system provides the following protocol

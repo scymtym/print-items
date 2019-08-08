@@ -17,10 +17,16 @@
    #:print-items
    #:effective-print-items)
 
+  ;; Functions
+  (:export
+   #:select-items)
+
   ;; Formatting functions
   (:export
    #:format-item
-   #:format-print-items)
+   #:format-print-items
+
+   #:format-selected-items)
 
   ;; `print-items-mixin' mixin class
   (:export

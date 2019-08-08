@@ -60,6 +60,25 @@
          (unique (remove-duplicates raw :key #'first :from-end t)))
    (sort-with-partial-order unique #'item-<)))
 
+;;;
+
+(defun select-item (items key)
+  (find key items :test #'eq :key #'first))
+
+(defun select-items (items &rest keys)
+  (map 'list (curry #'select-item items) keys))
+
+(defun expand-select-item (items key)
+  `(find ,key ,items :test #'eq :key #'first))
+
+(defun expand-select-items (items keys)
+  (loop :for key :in keys
+        :collect (expand-select-item items key)))
+
+(define-compiler-macro select-items (items &rest keys)
+  (once-only (items)
+    `(list ,@(expand-select-items items keys))))
+
 ;;; Formatting functions
 
 (defun format-item (stream item &optional colon? at?)
@@ -89,6 +108,23 @@
         (sort-with-partial-order
          (remove-duplicates items :key #'first :from-end t)
          #'item-<)))
+
+(defun format-selected-items (stream format-control items &rest keys)
+
+  (let ((fragments (map 'list (lambda (key)
+                                (when-let ((item (select-item items key)))
+                                  (with-output-to-string (stream)
+                                    (format-item stream item))))
+                        keys)))
+    (apply #'format stream format-control fragments)))
+
+(define-compiler-macro format-selected-items (stream format-control items &rest keys)
+  (once-only (stream items)
+    `(format ,stream ,format-control
+             ,@(loop :for key :in keys
+                     :collect `(with-output-to-string (stream)
+                                 (format-item
+                                  stream ,(expand-select-item items key)))))))
 
 ;;; Print items mixin
 

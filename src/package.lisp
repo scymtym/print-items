@@ -19,6 +19,7 @@
 
   ;; Formatting functions
   (:export
+   #:format-item
    #:format-print-items)
 
   ;; `print-items-mixin' mixin class

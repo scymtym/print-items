@@ -8,9 +8,31 @@
 
 ;;; Destructuring
 
+(defun maybe-convert-legacy-item (item)
+  (typecase item
+    ((cons t (cons t (or (cons null (cons list null))
+                         (cons string))))
+     (destructuring-bind (key value format-control &optional options) item
+       (list key (list (or format-control "~A") value) options)))
+    (t
+     item)))
+
 (defun parse-item (item)
-  (destructuring-bind (key value &optional format-control options) item
-    (values key t format-control value options)))
+  (destructuring-bind (key &optional format-and-arguments options)
+      (maybe-convert-legacy-item item)
+    (typecase format-and-arguments
+      (null
+       (values key nil nil nil options))
+      ((cons (or string function))
+       (values key
+               t
+               (first format-and-arguments)
+               (rest format-and-arguments)
+               options))
+      (cons
+       (values key t "~A" format-and-arguments options))
+      (t
+       (values key t "~A" (list format-and-arguments) options)))))
 
 (defmacro destructure-item ((key
                              &optional enabled? format-control values options)
@@ -96,12 +118,12 @@
 
 (defun item-< (left right)
   "Return non-nil if the left item should be placed before the right."
-  (destructure-item (key-left nil nil nil constraints-left) left
-    (destructure-item (key-right nil nil nil constraints-right) right
+  (destructure-item (key-left nil nil nil options-left) left
+    (destructure-item (key-right nil nil nil options-right) right
       (flet ((satisfied? (constraint other transpose?)
                (destructuring-bind (kind target) constraint
                  (ecase kind
                    (:after  (and transpose?       (eql other target)))
                    (:before (and (not transpose?) (eql other target)))))))
-        (or (some (rcurry #'satisfied? key-right nil) constraints-left)
-            (some (rcurry #'satisfied? key-left  t)   constraints-right))))))
+        (or (some (rcurry #'satisfied? key-right nil) options-left)
+            (some (rcurry #'satisfied? key-left  t)   options-right))))))

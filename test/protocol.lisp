@@ -60,3 +60,20 @@
 
      (((:foo 1) (:bar 2 nil ((:after  :foo)))) "12")
      (((:foo 1) (:bar 2 nil ((:before :foo)))) "21"))))
+
+(flet ((f (items)
+         (write-char #\[)
+         (format-print-items *standard-output* items)
+         (write-char #\])
+         (terpri)))
+  (format t "~70,,,'=<~>~%")
+  (map nil #'f '(((:foo "bar") (:foo))
+
+                 ((:foo)       (:foo "bar"))
+
+                 ((:foo nil))
+                 ((:foo (nil)))
+
+                 ((:foo ("~A ~A" 1 2)))
+
+                 ((:foo ("~A ~A" 1 2)) (:bar ("~A ~A" 3 4) ((:after :foo)))))))

@@ -162,7 +162,7 @@
 
    #+BEGIN_SRC lisp :exports both :results value
      (defmethod print-items:print-items append ((object value-mixin))
-       `((:value ,(value object) " = ~S" ((:AFTER :NAME)))))
+       `((:value (" = ~S" ,(value object)) ((:AFTER :NAME)))))
 
      (defclass binding (name-mixin value-mixin PRINT-ITEMS:PRINT-ITEMS-MIXIN)
        ())
@@ -193,13 +193,13 @@
           ())
 
         (defmethod print-items:print-items append ((object unnamed-binding))
-          `((:name nil "«unnamed»")))
+          `((:name "«unnamed»")))
 
         (princ-to-string (make-instance 'unnamed-binding :name nil :value 5))
       #+END_SRC
 
       #+RESULTS:
-      : #<UNNAMED-BINDING  = 5 {100E349E73}>
+      : #<UNNAMED-BINDING «unnamed» = 5 {1007DE4163}>
 
       #+BEGIN_SRC lisp :exports results :results silent
         (ignore-errors
@@ -267,17 +267,19 @@
     Each method should return a list of items of the form
 
     #+BEGIN_EXAMPLE
-      (KEY VALUE [FORMAT [(CONSTRAINT*)]]
-    #+END_EXAMPLE
+      ITEM              ::= (KEY [FORMAT-AND-VALUES [(OPTION*)]])
 
-    where
+      KEY               ::= any Lisp object
 
-    #+BEGIN_EXAMPLE
-      KEY        ::= any Lisp object
-      VALUE      ::= any Lisp object
-      FORMAT     ::= nil or a format string (Default is \"~A\")
+      FORMAT-AND-VALUES ::= `nil'
+                            | VALUE
+                            | (FORMAT-CONTROL ARGUMENT*)
+      FORMAT-CONTROL    ::= a format control string or a formatter function
+      VALUE             ::= any Lisp object not of type (or null (cons string))
+      ARGUMENT          ::= any Lisp object
 
-      CONSTRAINT ::= (:before | :after) KEY
+      OPTION            ::= CONSTRAINT
+      CONSTRAINT        ::= ((:before | :after) KEY)
     #+END_EXAMPLE
 
     When multiple items have =cl:eql= =KEY= s, items appearing closer
@@ -285,9 +287,9 @@
     can be used by subclasses to replace print items produced by
     superclasses.
 
-    When =FORMAT= is =nil=, the whole item is ignored. This mechanism
-    can be used by subclasses to disable print items produced by
-    superclasses.
+    When =FORMAT-AND-VALUES= is =nil=, the whole item is ignored. This
+    mechanism can be used by subclasses to disable print items
+    produced by superclasses.
 
   * =print-items:print-items-mixin [class]=
 

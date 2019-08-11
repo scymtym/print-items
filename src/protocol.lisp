@@ -16,24 +16,28 @@
 
     Each method should return a list of items of the form
 
-      (KEY VALUE [FORMAT [(CONSTRAINT*)]]
+      ITEM              ::= (KEY [FORMAT-AND-VALUES [(OPTION*)]])
 
-    where
+      KEY               ::= any Lisp object
 
-      KEY        ::= any Lisp object
-      VALUE      ::= any Lisp object
-      FORMAT     ::= `nil' or a format string (Default is \"~A\")
+      FORMAT-AND-VALUES ::= `nil'
+                            | VALUE
+                            | (FORMAT-CONTROL ARGUMENT*)
+      FORMAT-CONTROL    ::= a format control string or a formatter function
+      VALUE             ::= any Lisp object not of type (or null (cons string))
+      ARGUMENT          ::= any Lisp object
 
-      CONSTRAINT ::= (:before | :after) KEY
+      OPTION            ::= CONSTRAINT
+      CONSTRAINT        ::= ((:before | :after) KEY)
 
     When multiple items have `eql' KEYs, items appearing closer to the
     beginning of the item list take precedence. This mechanism can be
     used by subclasses to replace print items produced by
     superclasses.
 
-    When FORMAT is `nil' the whole item is ignored. This mechanism can
-    be used by subclasses to disable print items produced by
-    superclasses."))
+    When FORMAT-AND-VALUE is `nil' the whole item is ignored. This
+    mechanism can be used by subclasses to disable print items
+    produced by superclasses."))
 
 (defgeneric effective-print-items (object)
   (:documentation
@@ -60,9 +64,9 @@
 
 (defun format-item (stream item &optional colon? at?)
   (declare (ignore colon? at?))
-  (destructure-item (nil enabled? format value) item
+  (destructure-item (nil enabled? format arguments) item
     (when enabled?
-      (format stream (or format "~A") value))))
+      (format stream "~?" format arguments))))
 
 (defun format-print-items (stream items &optional colon? at?)
   "Print ITEMS onto STREAM.
